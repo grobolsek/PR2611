@@ -1,1 +1,3 @@
 # FRI-PR-seminarska
+
+## Setup
