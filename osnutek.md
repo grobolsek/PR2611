@@ -4,18 +4,18 @@
 
 Kriminal je pomemben družbeni pojav, ki vpliva na občutek varnosti prebivalcev ter na delovanje pravosodnega sistema. Razumevanje vzorcev kriminala lahko pomaga pri boljšem načrtovanju preventivnih ukrepov, učinkovitejšem delu policije in izboljšanju pravosodnih postopkov.
 
-V tem projektu bomo analizirali podatke o kriminalu v Sloveniji ter skušali ugotoviti, kako se kriminal porazdeli glede na lokacijo, vrsto kaznivega dejanja in druge dejavnike. Posebej nas zanima povezava med resnostjo kaznivega dejanja in nanj odzivom pravosodnega sistema in izidom kazenskega postopka, kot tudi kje v Sloveniji je kriminal večji del vsakdana. S tem bi želeli tudi napovedati kje in kakšni bojo zločini v Sloveniji v prihodnosti in ali se stanje slabša.
+V tem projektu bomo analizirali podatke o kriminalu v Sloveniji ter skušali ugotoviti, kako se kriminal porazdeli glede na lokacijo, vrsto kaznivega dejanja in druge dejavnike. Posebej nas zanima povezava med resnostjo kaznivega dejanja in odzivom nanj s strani pravosodnega sistema ter izidom kazenskega postopka, kot tudi kje v Sloveniji je kriminal večji del vsakdana. S tem bi želeli napovedati kje in kakšni bodo zločini v Sloveniji v prihodnosti in ali se stanje slabša.
 
 ## Cilji projekta in raziskovalna vprašanja
 
 Glavni cilj projekta je analizirati javno dostopne podatke o kriminalu v Sloveniji ter odgovoriti na naslednja raziskovalna vprašanja:
 
 - V katerih regijah ali krajih v Sloveniji je največ kaznivih dejanj?
-- Kako pogosti so kje kriminalni povratniki (repeat offenders)?
+- Kako pogosto posameznik zagreši več kaznivih dejanj glede na regijo?
 - Kakšna je verjetnost, da je storilec kaznivega dejanja identificiran in zaprt?
 - Ali obstaja povezava med resnostjo kaznivega dejanja in dolžino postopka obravnave?
 - Kako dolgo v povprečju traja obravnava različnih vrst kaznivih dejanj?
-- Ali obstajajo razlike v pogostosti in resnosti določenih vrst kaznivih dejanj glede na državljanstvo storilcev (slovenski ali tuji državljani)?
+- Ali obstajajo razlike v pogostosti in resnosti določenih vrst kaznivih dejanj glede na državljanstvo storilcev (slovensko ali tuje)?
 - Ali se varnost v Sloveniji zmanjšuje?
 
 S pomočjo analize podatkov bomo poskušali prepoznati vzorce in trende, ki bi lahko pomagali bolje razumeti kriminal v Sloveniji.
@@ -39,7 +39,7 @@ Podatke bomo pridobili iz odprtih podatkovnih virov. Predvideni viri vključujej
 
 Podatki so v tabelarični obliki (csv).
 
-Podatkovne zbirke lahko, nekateri včasih manjkajo, vsebujejo naslednje atribute:
+Podatkovne zbirke lahko, vsebujejo naslednje atribute (nekateri včasih manjkajo):
 
 - leto ali datum kaznivega dejanja
 - lokacija (regija, občina)
