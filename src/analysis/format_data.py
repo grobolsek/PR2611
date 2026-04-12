@@ -29,7 +29,7 @@ def format_data(input_file: pathlib.Path) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def format_all() -> None:
+def format_data_all() -> None:
     """Process all raw CSV files and write formatted output to data/formatted."""
     base_path = pathlib.Path(__file__).parent.parent.parent
 
@@ -49,7 +49,3 @@ def format_all() -> None:
         formatted_df.to_csv(save_path, sep=";", index=False, quoting=1, encoding="utf-8")
 
         logger.info(f"Processed: {file.name} -> {save_path}")
-
-
-if __name__ == "__main__":
-    format_all()
