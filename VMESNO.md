@@ -16,6 +16,8 @@ To ni presenetljivo že na prvi pogled, saj je Ljubljana največje mesto v Slove
 
 Med top 15 upravnimi enotami po absolutnem številu kaznivih dejanj izstopajo tudi Maribor, Celje, Koper in Novo mesto. Slednje je posebej zanimivo z vidika demografske strukture populacije — Novo mesto in okolica imata nadpovprečno prisotnost romske skupnosti, ki je pogosto v kontekstu kriminalistike posebej omenjana. Analiza podatkov kaže, da nekatere manjše urbane enote v jugovzhodni Sloveniji beležijo višjo stopnjo kriminala glede na populacijo.
 
+![Kazniva dejanja na 1000 prebivalcev po regiji](image-1.png)
+
 ---
 
 ## Državljanstvo storilcev: Tujci in kriminal
@@ -47,6 +49,8 @@ Med vrstami kaznivih dejanj prevladujejo **premoženjska kazniva dejanja**, kar 
 Analiza materialne škode kaže močno asimetrično porazdelitev: **mediana škode znaša le 100 EUR**, kar pomeni, da je večina kaznivih dejanj premoženjske narave razmeroma nizke vrednosti. Kljub temu obstaja dolg rep visokovrednih kaznivih dejanj — Z-score metoda je identificirala **416 statističnih osamelcev**, kjer škoda presega prag 3 standardne deviacije nad povprečjem (na logaritemski skali), IQR metoda pa je zaznala kar **3.155 primerov** nad zgornjo mejo 2.350 EUR. Med temi izstopajo primeri poslovne goljufije, zlorabe položaja in overitve lažne vsebine s škodami do **500.000 EUR** in več.
 
 KS test je potrdil, da porazdelitev materialne škode ni normalna niti na logaritemski skali (p ≈ 0), torej se močno razlikujejo od večinskih manjših  do nekaterih izredno velikih škod.
+
+![Top 20 kaznivih dejanj](image-2.png)
 
 ---
 
