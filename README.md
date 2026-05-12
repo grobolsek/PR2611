@@ -32,6 +32,7 @@ pre-commit install
 > Decided to add new line for each new column, this has been done so that learning algorithms will actually use them
 - [x] Group similar crime types (e.g. theft and fraud) into higher-level categories
 > Made a static mapping function that separates crimes into 18 groups.
+
 **Tables** - output as new separate tables, keep originals untouched
 
 - [ ] `ZaporednaStevilkaOsebeVKD` encodes who was involved in each criminal act (e.g. multiple victims or perpetrators). Use it to determine the roles present (victim, criminal) and outcomes (e.g. whether the criminal was sentenced). Create a new relation table that captures these relationships so they can be queried and analyzed.
