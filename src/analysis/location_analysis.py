@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from analysis.data_formatter import format_data_all
 from analysis.population import get_population
+from formatting.formatter import format_data_all
 
 YEAR = 2024
 
