@@ -35,12 +35,12 @@ pre-commit install
 
 **Tables** - output as new separate tables, keep originals untouched
 
-- [ ] `ZaporednaStevilkaOsebeVKD` encodes who was involved in each criminal act (e.g. multiple victims or perpetrators). Use it to determine the roles present (victim, criminal) and outcomes (e.g. whether the criminal was sentenced). Create a new relation table that captures these relationships so they can be queried and analyzed.
-- [ ] `MesecStoritve` records when a criminal act was committed. Combine all files and split records into separate files by year of the crime. If we can assume the year of the source file corresponds to when prosecution ended or was abandoned, we can compute how long each prosecution lasted - or how long authorities were willing to pursue a case before dropping it. Cross-reference with `ZaporednaStevilkaOsebeVKD` to match people to outcomes.
+- [x] `ZaporednaStevilkaOsebeVKD` encodes who was involved in each criminal act (e.g. multiple victims or perpetrators). Use it to determine the roles present (victim, criminal) and outcomes (e.g. whether the criminal was sentenced). Create a new relation table that captures these relationships so they can be queried and analyzed.
+- [x] `MesecStoritve` records when a criminal act was committed. Combine all files and split records into separate files by year of the crime. If we can assume the year of the source file corresponds to when prosecution ended or was abandoned, we can compute how long each prosecution lasted - or how long authorities were willing to pursue a case before dropping it. Cross-reference with `ZaporednaStevilkaOsebeVKD` to match people to outcomes.
 
 **Normalizations** - return normalized table via a function/class based on the current analysis goal
 
-- [ ] Normalize values per the dimension being analyzed (e.g. per-location normalization for geographic crime analysis)
+- [x] Normalize values per the dimension being analyzed (e.g. per-location normalization for geographic crime analysis)
 
 ---
 
