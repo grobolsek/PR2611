@@ -17,6 +17,20 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
+## Dashboard
+
+An interactive Streamlit dashboard ties the analysis together (trends, forecast,
+geography, weather/immigration correlation, an interactive Random-Forest crime
+predictor, and prosecution outcomes):
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The first visit to a page parses the large CSVs and is cached for the rest of the
+session, so subsequent navigation is instant. Pages live in `src/dashboard/views/`
+and reuse the modules in `src/analysis/`.
+
 ## TODO
 
 ### 1. Formatting data

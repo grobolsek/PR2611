@@ -3,15 +3,13 @@ from pathlib import Path
 import pandas as pd
 
 from analysis.population import get_population
-from formatting.formatter import format_data_all
 
 YEAR = 2024
+BASEDIR = Path(__file__).parents[2] / "data" / "by_year"
 
-
-files: dict[int, Path] = {int(file.name[2:6]): file for file in format_data_all(force=True)}
-
+files: dict[int, Path] = {int(file.name[-8:-4]): file for file in BASEDIR.glob("*.csv")}
 CA_data = pd.read_csv(files[YEAR], quoting=1, encoding="cp1250")
-print(CA_data)
+
 population = get_population(YEAR, 1)
 
 CA_data = CA_data[CA_data["VrstaOsebe"] == "OVADENI OSUMLJENEC"]
