@@ -62,7 +62,7 @@ def fetch_actual_weather(year: int) -> pd.DataFrame:
                     "date": pd.to_datetime(daily_data["time"]),
                     "temp": daily_data["temperature_2m_mean"],
                     "rain": daily_data["precipitation_sum"],
-                }
+                },
             )
 
             # Dynamic month format matching your crime dataset (e.g., MM.YYYY)

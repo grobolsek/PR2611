@@ -12,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
 from analysis.crime_prediction import prepare_advanced_dataset
-
 from dashboard import data
 
 FEATURE_COLS = ["Hour", "Day_Encoded", "Location_Encoded", "Izdana_Dovoljenja_Mesec"]
@@ -111,9 +110,7 @@ def render() -> None:
 
         proba = models["model_type"].predict_proba(x)[0]
         top = (
-            pd.DataFrame({"cluster": models["le_type"].classes_, "probability": proba})
-            .sort_values("probability", ascending=False)
-            .head(8)
+            pd.DataFrame({"cluster": models["le_type"].classes_, "probability": proba}).sort_values("probability", ascending=False).head(8)
         )
         fig = px.bar(
             top,
@@ -127,9 +124,8 @@ def render() -> None:
 
     st.divider()
     st.subheader("What drives the occurrence model?")
-    importances = (
-        pd.DataFrame({"feature": FEATURE_COLS, "importance": models["model_prob"].feature_importances_})
-        .sort_values("importance", ascending=False)
+    importances = pd.DataFrame({"feature": FEATURE_COLS, "importance": models["model_prob"].feature_importances_}).sort_values(
+        "importance", ascending=False
     )
     fig_i = px.bar(importances, x="importance", y="feature", orientation="h")
     fig_i.update_layout(height=260, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))

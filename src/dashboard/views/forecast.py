@@ -11,25 +11,26 @@ from dashboard import data
 def render() -> None:
     st.title("🔮 Crime Forecast")
     st.caption(
-        "Holt-Winters exponential smoothing (additive trend + seasonality) fit on "
-        "monthly totals 2000–2023 from `data/by_year/`.",
+        "Holt-Winters exponential smoothing (additive trend + seasonality) fit on monthly totals from `data/by_year/`.",
     )
 
-    horizon = st.slider("Forecast horizon (months)", 6, 36, 24, step=6)
+    col_start, col_horizon = st.columns(2)
+    start_year = col_start.slider("Training start year", 2000, 2020, 2010, step=1)
+    horizon = col_horizon.slider("Forecast horizon (months)", 6, 36, 24, step=6)
 
-    series = data.monthly_series_since_2000()
+    series = data.monthly_series(start_year)
     if series.empty:
         st.error("Could not build the historical time series from `data/by_year/`.")
         return
 
-    forecast = data.holt_winters_forecast(horizon)
+    forecast = data.holt_winters_forecast(horizon, start_year)
 
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=series.index,
             y=series.values,
-            name="Historical (2000+)",
+            name=f"Historical ({start_year}+)",
             line=dict(color="royalblue"),
         ),
     )

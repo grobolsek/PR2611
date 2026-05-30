@@ -28,11 +28,15 @@ def _normalize_location(location: object) -> object:
 def get_crime_weather_data(
     crimes: pd.DataFrame,
     weather: pd.DataFrame,
-    crime_cluster: str,
+    crime_cluster: str | None,
     city_col: str = "PUStoritveKD",
     month_col: str = "MesecStoritve",
 ) -> pd.DataFrame:
-    """Filter crimes by a specific cluster, aggregate by month/region, and merge with weather."""
+    """Aggregate crimes by month/region and merge with weather.
+
+    When ``crime_cluster`` is ``None`` all crime clusters are combined; otherwise
+    only rows of the given ``KD_SKUPINA`` cluster are kept.
+    """
     df_crimes = crimes.copy()
     df_weather = weather.copy()
 
@@ -42,7 +46,7 @@ def get_crime_weather_data(
     if "KD_SKUPINA" not in df_crimes.columns:
         raise KeyError("Column 'KD_SKUPINA' missing in crimes DataFrame.")
 
-    filtered_crimes = df_crimes[df_crimes["KD_SKUPINA"] == crime_cluster]
+    filtered_crimes = df_crimes if crime_cluster is None else df_crimes[df_crimes["KD_SKUPINA"] == crime_cluster]
 
     if filtered_crimes.empty:
         logger.warning("No rows found for crime cluster %r", crime_cluster)

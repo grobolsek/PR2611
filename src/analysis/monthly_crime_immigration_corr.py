@@ -15,12 +15,16 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def get_monthly_crime_counts(df_crimes: pd.DataFrame, crime_cluster: str) -> pd.DataFrame:
-    """Filter crime by cluster and return the monthly count of criminal offenses."""
+def get_monthly_crime_counts(df_crimes: pd.DataFrame, crime_cluster: str | None) -> pd.DataFrame:
+    """Return the monthly count of criminal offenses.
+
+    When ``crime_cluster`` is ``None`` all clusters are combined; otherwise only
+    rows of the given ``KD_SKUPINA`` cluster are counted.
+    """
     if "KD_SKUPINA" not in df_crimes.columns:
         raise KeyError("The column 'KD_SKUPINA' is missing from the crime database.")
 
-    df_filtered = df_crimes[df_crimes["KD_SKUPINA"] == crime_cluster].copy()
+    df_filtered = (df_crimes if crime_cluster is None else df_crimes[df_crimes["KD_SKUPINA"] == crime_cluster]).copy()
 
     if df_filtered.empty:
         logger.warning(f"No rows found for the specified crime cluster: {crime_cluster}")
@@ -34,7 +38,7 @@ def get_monthly_crime_counts(df_crimes: pd.DataFrame, crime_cluster: str) -> pd.
     return crime_monthly
 
 
-def analyze_monthly_correlation(year: int, base_directory: Path, crime_cluster: str) -> pd.DataFrame:
+def analyze_monthly_correlation(year: int, base_directory: Path, crime_cluster: str | None) -> pd.DataFrame:
     """Merge monthly crime and immigration data to calculate the Pearson correlation."""
     # File paths configuration
     crime_file = base_directory / "data" / "formatted" / f"kd{year}.csv"

@@ -74,7 +74,7 @@ def extract_monthly_data(file_path: Path, year: int) -> pd.DataFrame:
                     {
                         "MesecStoritve": f"{month_num}.{year}",
                         "Izdana_Dovoljenja_Mesec": total_issued,
-                    }
+                    },
                 )
 
         return pd.DataFrame(monthly_records)

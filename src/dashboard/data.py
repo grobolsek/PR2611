@@ -32,6 +32,9 @@ MONTH_COL = "MesecStoritve"
 # Crime clusters the seminar focuses on for the correlation studies.
 DEFAULT_CLUSTERS = ["Premoženjska kazniva dejanja", "Nasilje nad osebami"]
 
+# Selector label that means "do not filter by cluster — combine all crimes".
+ALL_CRIMES_LABEL = "All crimes (combined)"
+
 
 def _read_csv(path: Path, **kwargs: object) -> pd.DataFrame:
     """Read a project CSV, transparently falling back to cp1250 encoding."""
@@ -128,16 +131,15 @@ def year_summary(year: int) -> dict[str, object]:
     )
     if df.empty:
         return {}
-    suspects = df[df["VrstaOsebe"].astype(str).str.contains("OSUMLJ|OBTO|OVAD", case=False, na=False)] \
-        if "VrstaOsebe" in df.columns else df
+    suspects = df[df["VrstaOsebe"].astype(str).str.contains("OSUMLJ|OBTO|OVAD", case=False, na=False)] if "VrstaOsebe" in df.columns else df
     return {
         "unique_crimes": int(df[CRIME_ID_COL].nunique()),
-        "person_rows": int(len(df)),
+        "person_rows": len(df),
         "n_clusters": int(df[CRIME_GROUP_COL].nunique()),
         "n_locations": int(df[LOCATION_COL].nunique()),
         "top_cluster": df[CRIME_GROUP_COL].value_counts().idxmax(),
         "top_location": df[LOCATION_COL].value_counts().idxmax(),
-        "suspect_rows": int(len(suspects)),
+        "suspect_rows": len(suspects),
     }
 
 
@@ -159,9 +161,29 @@ def _start_hour(ura: object) -> int | None:
     return int(m.group(1)) if m else None
 
 
+@st.cache_data(show_spinner="Fetching population…")
+def population_by_pu(year: int, half_year: int = 1) -> pd.Series:
+    """Population per police directorate (PU) from SiStat, indexed by PU name.
+
+    Returns an empty Series if the SiStat API is unreachable, so callers can
+    degrade gracefully without population data.
+    """
+    from analysis.population import get_population
+
+    try:
+        pop = get_population(year, half_year)
+    except Exception:
+        return pd.Series(dtype="float64")
+    return pop.set_index("region")["sum"]
+
+
 @st.cache_data(show_spinner="Computing location statistics…")
 def location_counts(year: int, suspects_only: bool = True) -> pd.DataFrame:
-    """Crime counts per police directorate (PU) for a year."""
+    """Crime counts per police directorate (PU) for a year.
+
+    ``percent`` is the normalized per-capita rate (crimes / population), shown
+    as crimes per 100 inhabitants; ``population`` is the PU population.
+    """
     df = load_formatted(year, columns=(LOCATION_COL, "VrstaOsebe", CRIME_ID_COL))
     if df.empty:
         return pd.DataFrame()
@@ -175,8 +197,9 @@ def location_counts(year: int, suspects_only: bool = True) -> pd.DataFrame:
         .rename(columns={LOCATION_COL: "location"})
         .sort_values("count", ascending=False)
     )
-    total = stats["count"].sum()
-    stats["percent"] = (stats["count"] / total * 100).round(2) if total else 0
+    population = population_by_pu(year)
+    stats["population"] = stats["location"].map(population).astype("Int64")
+    stats["percent"] = (stats["count"] / stats["population"] * 100).round(4)
     return stats
 
 
@@ -213,14 +236,14 @@ def crime_type_distribution(year: int) -> pd.DataFrame:
 # Long-term forecasting series (data/by_year/<YYYY>.csv) — reads only the month
 # column so the multi-GB folder stays cheap to scan.
 # --------------------------------------------------------------------------- #
-@st.cache_data(show_spinner="Building the 2000+ monthly time series…")
-def monthly_series_since_2000() -> pd.Series:
-    """Monthly total crime counts from 2000 to 2023, interpolated."""
+@st.cache_data(show_spinner="Building the monthly time series…")
+def monthly_series(start_year: int = 2010, end_year: int = 2023) -> pd.Series:
+    """Monthly total crime counts between ``start_year`` and ``end_year``, interpolated."""
     files = sorted(f for f in BY_YEAR_DIR.glob("*.csv") if re.match(r"^\d{4}$", f.stem))
     records = []
     for path in files:
         year = int(path.stem)
-        if year < 2000 or year > 2023:
+        if year < start_year or year > end_year:
             continue
         header = _read_csv(path, nrows=0)
         month_col = "MesecStoritve" if "MesecStoritve" in header.columns else "Mesec"
@@ -243,11 +266,11 @@ def monthly_series_since_2000() -> pd.Series:
 
 
 @st.cache_data(show_spinner="Fitting Holt-Winters forecast…")
-def holt_winters_forecast(months: int = 24) -> pd.Series:
+def holt_winters_forecast(months: int = 24, start_year: int = 2010) -> pd.Series:
     """Forecast total monthly crime ``months`` ahead with Holt-Winters."""
     from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-    series = monthly_series_since_2000()
+    series = monthly_series(start_year)
     if series.empty:
         return pd.Series(dtype="float64")
     series = series.astype(float)
@@ -268,6 +291,45 @@ def load_immigration() -> pd.DataFrame:
     df[MONTH_COL] = df[MONTH_COL].astype(str).str.strip()
     df["Datum"] = pd.to_datetime(df[MONTH_COL], format="%m.%Y", errors="coerce")
     return df.sort_values("Datum")
+
+
+@st.cache_data(show_spinner="Ranking clusters by immigration correlation…")
+def immigration_cluster_correlations(year: int) -> pd.Series:
+    """Pearson r between each crime cluster's monthly count and issued permits.
+
+    Returns a Series indexed by cluster label (plus :data:`ALL_CRIMES_LABEL` for
+    all crimes combined), sorted by absolute correlation strength descending.
+    Empty if crime or immigration data is unavailable for the year.
+    """
+    from analysis import monthly_crime_immigration_corr as mci
+
+    crimes = load_formatted(year, columns=(CRIME_GROUP_COL, MONTH_COL))
+    imm = load_immigration()
+    if crimes.empty or imm.empty:
+        return pd.Series(dtype="float64")
+
+    def _pad(month: str) -> str:
+        return f"0{month}" if len(month) == 6 else month
+
+    imm = imm.copy()
+    imm[MONTH_COL] = imm[MONTH_COL].astype(str).str.strip().map(_pad)
+
+    clusters = sorted(crimes[CRIME_GROUP_COL].dropna().unique())
+    results: dict[str, float] = {}
+    for label, cluster in [(ALL_CRIMES_LABEL, None), *((c, c) for c in clusters)]:
+        monthly = mci.get_monthly_crime_counts(crimes, cluster)
+        if monthly.empty:
+            continue
+        monthly[MONTH_COL] = monthly[MONTH_COL].map(_pad)
+        merged = monthly.merge(imm, on=MONTH_COL, how="inner")
+        if len(merged) < 2:
+            continue
+        r = merged["crime_count"].corr(merged["Izdana_Dovoljenja_Mesec"])
+        if pd.notna(r):
+            results[label] = float(r)
+
+    series = pd.Series(results)
+    return series.reindex(series.abs().sort_values(ascending=False).index)
 
 
 @st.cache_data(show_spinner=False)

@@ -2,10 +2,36 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import plotly.express as px
 import streamlit as st
 
 from dashboard import data
+
+if TYPE_CHECKING:
+    import pandas as pd
+    import plotly.graph_objects as go
+
+
+def _hbar(df: pd.DataFrame, value_col: str, label: str, color_scale: str) -> go.Figure:
+    """Horizontal bar chart of ``value_col`` per location, sorted descending."""
+    fig = px.bar(
+        df.sort_values(value_col, ascending=False),
+        x=value_col,
+        y="location",
+        orientation="h",
+        color=value_col,
+        color_continuous_scale=color_scale,
+        labels={value_col: label, "location": ""},
+    )
+    fig.update_layout(
+        height=460,
+        coloraxis_showscale=False,
+        yaxis=dict(categoryorder="total ascending"),
+        margin=dict(t=10),
+    )
+    return fig
 
 
 def render() -> None:
@@ -30,24 +56,39 @@ def render() -> None:
         st.warning("No data for this year.")
         return
 
-    fig = px.bar(
-        counts,
-        x="count",
-        y="location",
-        orientation="h",
-        color="count",
-        color_continuous_scale="Reds",
-        labels={"count": "Records", "location": ""},
-    )
-    fig.update_layout(
-        height=460,
-        coloraxis_showscale=False,
-        yaxis=dict(categoryorder="total ascending"),
-        margin=dict(t=10),
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    col_count, col_rate = st.columns(2)
 
-    st.dataframe(counts, use_container_width=True, hide_index=True)
+    with col_count:
+        st.subheader("Records")
+        st.plotly_chart(_hbar(counts, "count", "Records", "Reds"), use_container_width=True)
+
+    with col_rate:
+        st.subheader("Per 100 inhabitants")
+        rate = counts.dropna(subset=["percent"])
+        if rate.empty:
+            st.info("No population data available (SiStat API unreachable).")
+        else:
+            st.plotly_chart(
+                _hbar(rate, "percent", "Records per 100 inhabitants", "Blues"),
+                use_container_width=True,
+            )
+
+    st.dataframe(
+        counts,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "location": "Region",
+            "count": "Records",
+            "unique_crimes": "Unique crimes",
+            "population": st.column_config.NumberColumn("Population", format="%d"),
+            "percent": st.column_config.NumberColumn(
+                "Per 100 inhabitants",
+                help="Normalized rate: records / population × 100.",
+                format="%.4f",
+            ),
+        },
+    )
 
     st.divider()
     tab_hour, tab_type = st.tabs(["⏰ Hourly pattern", "🏷️ Crime mix per region"])

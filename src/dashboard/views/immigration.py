@@ -8,15 +8,13 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from analysis import monthly_crime_immigration_corr as mci
-
 from dashboard import data
 
 
 def render() -> None:
     st.title("🛂 Immigration Correlation")
     st.caption(
-        "Do monthly issued residence permits move with recorded crime? "
-        "Correlation via `analysis.monthly_crime_immigration_corr`.",
+        "Do monthly issued residence permits move with recorded crime? Correlation via `analysis.monthly_crime_immigration_corr`.",
     )
 
     imm = data.load_immigration()
@@ -40,12 +38,25 @@ def render() -> None:
 
     col_y, col_c = st.columns(2)
     year = col_y.selectbox("Year", common[::-1])
-    crimes_for_clusters = data.load_formatted(year, columns=(data.CRIME_GROUP_COL,))
-    clusters = sorted(crimes_for_clusters[data.CRIME_GROUP_COL].dropna().unique())
-    default_idx = clusters.index("Premoženjska kazniva dejanja") if "Premoženjska kazniva dejanja" in clusters else 0
-    cluster = col_c.selectbox("Crime cluster", clusters, index=default_idx)
 
-    corr = mci.analyze_monthly_correlation(year, data.BASE_DIR, cluster)
+    corrs = data.immigration_cluster_correlations(year)
+    if not corrs.empty:
+        options = list(corrs.index)
+
+        def _fmt(label: str) -> str:
+            return f"{label}  (r={corrs[label]:+.2f})"
+    else:
+        crimes_for_clusters = data.load_formatted(year, columns=(data.CRIME_GROUP_COL,))
+        clusters = sorted(crimes_for_clusters[data.CRIME_GROUP_COL].dropna().unique())
+        options = [data.ALL_CRIMES_LABEL, *clusters]
+
+        def _fmt(label: str) -> str:
+            return label
+
+    cluster = col_c.selectbox("Crime cluster (sorted by |correlation|)", options, format_func=_fmt)
+    crime_cluster = None if cluster == data.ALL_CRIMES_LABEL else cluster
+
+    corr = mci.analyze_monthly_correlation(year, data.BASE_DIR, crime_cluster)
     if corr.empty:
         st.warning("No overlapping monthly data for this selection.")
         return
@@ -56,10 +67,13 @@ def render() -> None:
     # Rebuild the merged monthly series for a dual-axis chart.
     crime_monthly = mci.get_monthly_crime_counts(
         data.load_formatted(year, columns=(data.CRIME_GROUP_COL, data.MONTH_COL)),
-        cluster,
+        crime_cluster,
     )
     crime_monthly[data.MONTH_COL] = (
-        crime_monthly[data.MONTH_COL].astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
+        crime_monthly[data.MONTH_COL]
+        .astype(str)
+        .str.replace(r"\.0$", "", regex=True)
+        .str.strip()
         .apply(lambda x: f"0{x}" if len(x) == 6 else x)
     )
     imm_y = imm.copy()
