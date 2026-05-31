@@ -2,13 +2,13 @@
 
 ## Uvod
 
-Kriminal je eden izmed ključnih kazalnikov zdravja neke družbe. Razumevanje njegovih vzorcev — kje se pojavlja, kdo so storilci, kdaj se dogaja in kakšne so posledice — je temelj za učinkovito preventivo in načrtovanje policijskega dela. V tej analizi smo pregledali podatke Policije Republike Slovenije za leto 2024, ki obsegajo **110.452 vrstic** in **65.297 unikatnih kaznivih dejanj** v osmih policijskih upravah ter 60 upravnih enotah po vsej državi.
+Kriminal je eden izmed ključnih kazalnikov zdravja neke družbe. Razumevanje njegovih vzorcev — kje se pojavlja, kdo so storilci, kdaj se dogaja in kakšne so posledice — je temelj za učinkovito preventivo in načrtovanje policijskega dela. V tej analizi smo pregledali podatke Policije Republike Slovenije vse do leta 2024, ki obsegajo okoli **110.000 vrstic** za vsako leto in **65.000 unikatnih kaznivih dejanj** v osmih policijskih upravah ter 60 upravnih enotah po vsej državi.
 
 Cilj analize je bil odgovoriti na vprašanja o geografski porazdelitvi kriminala, vlogi državljanstva storilcev, časovnih vzorcih in resnosti kaznivih dejanj ter s tem ponuditi vpogled, ki bi lahko koristil pri bolj učinkovitem razporejanju policijskih patrulj in oblikovanju preventivnih programov.
 
 ---
 
-## Geografska porazdelitev: Ljubljana na samem vrhu:(
+## Geografska porazdelitev: Ljubljana na samem vrhu:
 
 Eden izmed najbolj udarnih rezultatov analize je izrazita geografska koncentracija kriminala. Z variančno metodo (μ + 2σ) smo ugotovili, da je **Ljubljana edina upravna enota, ki statistično izstopa** s kar **35.174 kaznivimi dejanji** — daleč nad izračunanim pragom 10.984. Nobena druga upravna enota se niti ni približala tej meji.
 
