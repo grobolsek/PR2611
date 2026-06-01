@@ -35,6 +35,9 @@ DEFAULT_CLUSTERS = ["Premoženjska kazniva dejanja", "Nasilje nad osebami"]
 # Selector label that means "do not filter by cluster — combine all crimes".
 ALL_CRIMES_LABEL = "All crimes (combined)"
 
+# Slovenian weekday names in calendar order (data/formatted DanVTednu column).
+WEEKDAY_ORDER = ["PONEDELJEK", "TOREK", "SREDA", "ČETRTEK", "PETEK", "SOBOTA", "NEDELJA"]
+
 
 def _read_csv(path: Path, **kwargs: object) -> pd.DataFrame:
     """Read a project CSV, transparently falling back to cp1250 encoding."""
@@ -122,6 +125,52 @@ def crime_group_trends() -> pd.DataFrame:
     return matrix
 
 
+def _temporal_bucket(series: pd.Series, dimension: str) -> pd.Series:
+    """Map a raw crime column to a month (1–12), weekday name, or hour (0–23)."""
+    text = series.astype(str).str.strip()
+    if dimension == "month":
+        return pd.to_numeric(text.str.split(".").str[0], errors="coerce")
+    if dimension == "hour":
+        return pd.to_numeric(text.str.extract(r"^(\d{1,2})")[0], errors="coerce")
+    return text.str.upper().replace("NAN", pd.NA)
+
+
+@st.cache_data(show_spinner="Building temporal trend matrix…")
+def crime_temporal_trends(dimension: str) -> pd.DataFrame:
+    """Bucket × crime-cluster matrix of unique offences, summed over all years.
+
+    ``dimension`` is one of ``"month"`` (1–12), ``"weekday"`` (Mon–Sun) or
+    ``"hour"`` (0–23). Buckets are ordered and gap-filled with zeros.
+    """
+    col = {"month": MONTH_COL, "weekday": "DanVTednu", "hour": "UraStoritve"}[dimension]
+    frames = []
+    for year in formatted_years():
+        df = load_formatted(year, columns=(col, CRIME_GROUP_COL, CRIME_ID_COL))
+        if df.empty or col not in df.columns:
+            continue
+        df = df.copy()
+        df["bucket"] = _temporal_bucket(df[col], dimension)
+        df = df.dropna(subset=["bucket", CRIME_GROUP_COL])
+        if dimension in ("month", "hour"):
+            df["bucket"] = df["bucket"].astype(int)
+        frames.append(df.groupby(["bucket", CRIME_GROUP_COL])[CRIME_ID_COL].nunique())
+    if not frames:
+        return pd.DataFrame()
+
+    matrix = pd.concat(frames).groupby(level=[0, 1]).sum().unstack(CRIME_GROUP_COL)
+
+    if dimension == "month":
+        matrix = matrix.reindex(range(1, 13))
+        matrix.index.name = "Month"
+    elif dimension == "hour":
+        matrix = matrix.reindex(range(24))
+        matrix.index.name = "Hour"
+    else:
+        matrix = matrix.reindex([d for d in WEEKDAY_ORDER if d in matrix.index])
+        matrix.index.name = "Day of week"
+    return matrix.fillna(0).astype(int)
+
+
 @st.cache_data(show_spinner="Summarising a year…")
 def year_summary(year: int) -> dict[str, object]:
     """Headline figures for a single formatted year."""
@@ -143,6 +192,65 @@ def year_summary(year: int) -> dict[str, object]:
     }
 
 
+@st.cache_data(show_spinner="Profiling suspects…")
+def suspect_profile(year: int) -> dict[str, pd.DataFrame]:
+    """Suspect-only breakdowns for a year.
+
+    Filters to suspect records (``VrstaOsebe`` containing ``OSUMLJ``) and returns
+    DataFrames keyed ``top_crimes``, ``gender`` and ``citizenship`` (Slovenian vs
+    foreign nationality). Empty dict when no suspect rows exist.
+    """
+    df = load_formatted(year, columns=("VrstaOsebe", "Spol", "Drzavljanstvo", CRIME_GROUP_COL))
+    if df.empty or "VrstaOsebe" not in df.columns:
+        return {}
+    suspects = df[df["VrstaOsebe"].astype(str).str.contains("OSUMLJ", na=False)]
+    if suspects.empty:
+        return {}
+
+    def _counts(col: str, name: str) -> pd.DataFrame:
+        return suspects[col].value_counts(dropna=False).rename_axis(name).reset_index(name="count")
+
+    return {
+        "top_crimes": _counts(CRIME_GROUP_COL, "crime").head(10),
+        "gender": _counts("Spol", "gender"),
+        "citizenship": _counts("Drzavljanstvo", "citizenship"),
+    }
+
+
+@st.cache_data(show_spinner="Profiling suspects (all years)…")
+def suspect_profile_all() -> dict[str, pd.DataFrame]:
+    """Suspect-only breakdowns summed across every formatted year.
+
+    Same shape as :func:`suspect_profile` (``top_crimes``/``gender``/
+    ``citizenship``), but aggregated over all available years.
+    """
+    col_map = {"crime": CRIME_GROUP_COL, "gender": "Spol", "citizenship": "Drzavljanstvo"}
+    totals = {key: pd.Series(dtype="float64") for key in col_map}
+    for year in formatted_years():
+        df = load_formatted(year, columns=("VrstaOsebe", "Spol", "Drzavljanstvo", CRIME_GROUP_COL))
+        if df.empty or "VrstaOsebe" not in df.columns:
+            continue
+        suspects = df[df["VrstaOsebe"].astype(str).str.contains("OSUMLJ", na=False)]
+        for key, col in col_map.items():
+            if col in suspects.columns:
+                totals[key] = totals[key].add(suspects[col].value_counts(dropna=False), fill_value=0)
+
+    if all(series.empty for series in totals.values()):
+        return {}
+
+    def _frame(key: str, name: str, top: int | None = None) -> pd.DataFrame:
+        series = totals[key].astype(int).sort_values(ascending=False)
+        if top is not None:
+            series = series.head(top)
+        return series.rename_axis(name).reset_index(name="count")
+
+    return {
+        "top_crimes": _frame("crime", "crime", top=10),
+        "gender": _frame("gender", "gender"),
+        "citizenship": _frame("citizenship", "citizenship"),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Geography (re-implemented from analysis.normalization to avoid its deleted
 # population.py dependency; absolute counts + per-city distributions).
@@ -152,13 +260,6 @@ def _normalize_location(loc: object) -> object:
         return loc
     text = str(loc).strip()
     return "NI PODATKA" if text.upper() == "GPU" else text
-
-
-def _start_hour(ura: object) -> int | None:
-    if pd.isna(ura):
-        return None
-    m = re.match(r"^(\d{1,2})", str(ura).strip())
-    return int(m.group(1)) if m else None
 
 
 @st.cache_data(show_spinner="Fetching population…")
@@ -201,22 +302,6 @@ def location_counts(year: int, suspects_only: bool = True) -> pd.DataFrame:
     stats["population"] = stats["location"].map(population).astype("Int64")
     stats["percent"] = (stats["count"] / stats["population"] * 100).round(4)
     return stats
-
-
-@st.cache_data(show_spinner="Computing hourly distribution…")
-def hourly_distribution(year: int) -> pd.DataFrame:
-    """Share of crimes per start-hour, per location."""
-    df = load_formatted(year, columns=(LOCATION_COL, "UraStoritve"))
-    if df.empty:
-        return pd.DataFrame()
-    df[LOCATION_COL] = df[LOCATION_COL].apply(_normalize_location)
-    df["hour"] = df["UraStoritve"].apply(_start_hour)
-    df = df.dropna(subset=["hour"])
-    df["hour"] = df["hour"].astype(int)
-    counts = df.groupby([LOCATION_COL, "hour"]).size().reset_index(name="count")
-    totals = counts.groupby(LOCATION_COL)["count"].transform("sum")
-    counts["pct_of_city"] = (counts["count"] / totals * 100).round(2)
-    return counts.rename(columns={LOCATION_COL: "location"})
 
 
 @st.cache_data(show_spinner="Computing crime-type distribution…")
@@ -283,8 +368,16 @@ def holt_winters_forecast(months: int = 24, start_year: int = 2010) -> pd.Series
 # --------------------------------------------------------------------------- #
 @st.cache_data(show_spinner=False)
 def load_immigration() -> pd.DataFrame:
-    """Monthly issued residence-permit counts."""
+    """Monthly issued residence-permit counts.
+
+    Generates the trends CSV from the source workbooks via
+    ``analysis.process_monthly_immigration`` when it is missing.
+    """
+    from analysis.process_monthly_immigration import generate_monthly_immigration_file
+
     path = IMMIGRATION_DIR / "monthly_immigration_trends.csv"
+    if not path.exists():
+        generate_monthly_immigration_file(IMMIGRATION_DIR)
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path, encoding="utf-8")
@@ -334,33 +427,73 @@ def immigration_cluster_correlations(year: int) -> pd.Series:
 
 @st.cache_data(show_spinner=False)
 def weather_years() -> list[int]:
-    years = []
-    for f in WEATHER_DIR.glob("slovenia_weather_*.csv"):
-        m = re.search(r"(\d{4})", f.stem)
-        if m:
-            years.append(int(m.group(1)))
-    return sorted(years)
+    """Years available for weather analysis.
+
+    Any year with a formatted crime file qualifies — weather for missing years
+    is fetched on demand by :func:`load_weather`.
+    """
+    return formatted_years()
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner="Fetching weather…")
 def load_weather(year: int) -> pd.DataFrame:
+    """Monthly weather per PU for ``year``.
+
+    Downloads it from the Open-Meteo archive via ``analysis.fetch_weather`` and
+    caches it to ``data/weather/`` when the file is missing.
+    """
+    from analysis.fetch_weather import fetch_actual_weather
+
     path = WEATHER_DIR / f"slovenia_weather_{year}.csv"
+    if not path.exists():
+        try:
+            df = fetch_actual_weather(year)
+        except Exception:
+            df = pd.DataFrame()
+        if not df.empty:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(path, index=False, encoding="utf-8")
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path, encoding="utf-8")
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner="Building prosecution analysis…")
 def load_prosecution() -> pd.DataFrame:
+    """Prosecution-duration analysis.
+
+    Generated from the formatted crime files (and the person-relations table,
+    itself generated if missing) via ``analysis.prosecution_duration`` when the
+    CSV is absent.
+    """
+    from analysis.prosecution_duration import build_prosecution_analysis
+    from analysis.relations import build_relations
+
     path = PROSECUTION_DIR / "prosecution_analysis.csv"
+    relations_path = RELATIONS_DIR / "person_relations.csv"
+    if not path.exists():
+        try:
+            if not relations_path.exists():
+                build_relations(FORMATTED_DIR, relations_path)
+            build_prosecution_analysis(FORMATTED_DIR, relations_path, path)
+        except Exception:
+            return pd.DataFrame()
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path, encoding="utf-8", quoting=1)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner="Building person-relations table…")
 def load_relations() -> pd.DataFrame:
+    """Person–crime relations, generated from the formatted files when missing."""
+    from analysis.relations import build_relations
+
     path = RELATIONS_DIR / "person_relations.csv"
+    if not path.exists():
+        try:
+            build_relations(FORMATTED_DIR, path)
+        except Exception:
+            return pd.DataFrame()
     if not path.exists():
         return pd.DataFrame()
     return pd.read_csv(path, encoding="utf-8", quoting=1)
