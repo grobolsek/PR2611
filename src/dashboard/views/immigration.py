@@ -25,7 +25,7 @@ def render() -> None:
     st.subheader("Monthly issued residence permits")
     fig_imm = px.area(imm, x="Datum", y="Izdana_Dovoljenja_Mesec", labels={"Izdana_Dovoljenja_Mesec": "Permits"})
     fig_imm.update_layout(height=300, margin=dict(t=10), xaxis_title="")
-    st.plotly_chart(fig_imm, use_container_width=True)
+    st.plotly_chart(fig_imm, width='stretch')
 
     st.divider()
 
@@ -93,9 +93,9 @@ def render() -> None:
         fig.update_yaxes(title_text="Monthly crime count", secondary_y=False)
         fig.update_yaxes(title_text="Issued permits", secondary_y=True)
         fig.update_layout(height=440, legend=dict(orientation="h", y=1.02, yanchor="bottom"), margin=dict(t=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     st.dataframe(
         corr.style.background_gradient(cmap="RdBu", vmin=-1, vmax=1).format("{:.3f}"),
-        use_container_width=True,
+        width='stretch',
     )

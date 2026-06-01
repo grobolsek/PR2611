@@ -31,7 +31,7 @@ def _suspect_section(year_range: str) -> None:
         labels={"count": "Suspect records", "crime": ""},
     )
     fig_c.update_layout(height=380, coloraxis_showscale=False, margin=dict(t=10))
-    st.plotly_chart(fig_c, use_container_width=True)
+    st.plotly_chart(fig_c, width='stretch')
 
     st.markdown("**Demographics**")
     d1, d2 = st.columns(2)
@@ -40,7 +40,7 @@ def _suspect_section(year_range: str) -> None:
         fig_g = px.pie(gender, names="gender", values="count", hole=0.45, title="Gender")
         fig_g.update_layout(height=320, margin=dict(t=40))
         fig_g.update_traces(textinfo="percent+label")
-        st.plotly_chart(fig_g, use_container_width=True)
+        st.plotly_chart(fig_g, width='stretch')
     with d2:
         citizenship = profile["citizenship"].assign(
             citizenship=lambda d: d["citizenship"].map(_CITIZENSHIP_LABELS).fillna(d["citizenship"]),
@@ -48,7 +48,7 @@ def _suspect_section(year_range: str) -> None:
         fig_n = px.pie(citizenship, names="citizenship", values="count", hole=0.45, title="Slovenian vs foreign")
         fig_n.update_layout(height=320, margin=dict(t=40))
         fig_n.update_traces(textinfo="percent+label")
-        st.plotly_chart(fig_n, use_container_width=True)
+        st.plotly_chart(fig_n, width='stretch')
 
 
 def render() -> None:
@@ -85,7 +85,7 @@ def render() -> None:
             color_continuous_scale="Blues",
         )
         fig.update_layout(coloraxis_showscale=False, height=380, margin=dict(t=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with right:
         st.subheader("Inspect a year")

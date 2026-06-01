@@ -65,7 +65,7 @@ def render() -> None:
     st.subheader("Correlation matrix")
     st.dataframe(
         corr.style.background_gradient(cmap="RdBu", vmin=-1, vmax=1).format("{:.3f}"),
-        use_container_width=True,
+        width='stretch',
     )
 
     metric_map = {
@@ -85,7 +85,7 @@ def render() -> None:
             labels={ycol: ylabel, xcol: label},
         )
         fig.update_layout(height=460, legend_title="")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with st.expander("Merged crime + weather rows"):
-        st.dataframe(merged, use_container_width=True, hide_index=True)
+        st.dataframe(merged, width='stretch', hide_index=True)

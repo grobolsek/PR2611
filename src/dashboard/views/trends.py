@@ -28,7 +28,7 @@ def _side_panel(trends: pd.DataFrame, dimension: str, dim_label: str) -> None:
         by_bucket = trends.sum(axis=1)
         st.caption(f"Peak: {by_bucket.idxmax()} ({by_bucket.max():,} offences)")
         table = by_bucket.reset_index().rename(columns={trends.index.name: dim_label, 0: "Offences"})
-    st.dataframe(table, use_container_width=True, hide_index=True)
+    st.dataframe(table, width='stretch', hide_index=True)
 
 
 def render() -> None:
@@ -71,7 +71,7 @@ def render() -> None:
     xcol = long.columns[0]
     fig = px.line(long, x=xcol, y=ylabel, color="Cluster", markers=True)
     fig.update_layout(height=460, xaxis_title=dim_label, legend_title="")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     st.divider()
     col1, col2 = st.columns(2)
@@ -86,7 +86,7 @@ def render() -> None:
         )
         fig2.update_layout(height=380, showlegend=False)
         fig2.update_traces(textposition="inside", textinfo="percent+label")
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
 
     with st.expander("Raw trend matrix"):
-        st.dataframe(trends, use_container_width=True)
+        st.dataframe(trends, width='stretch')
