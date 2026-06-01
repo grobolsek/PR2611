@@ -2,120 +2,86 @@
 
 ## Uvod
 
-Kriminal je eden izmed ključnih kazalnikov zdravja neke družbe. Razumevanje njegovih vzorcev — kje se pojavlja, kdo so storilci, kdaj se dogaja in kakšne so posledice — je temelj za učinkovito preventivo in načrtovanje policijskega dela. V tej analizi smo pregledali podatke Policije Republike Slovenije vse do leta 2024, ki obsegajo okoli **110.000 vrstic** za vsako leto in **65.000 unikatnih kaznivih dejanj** v osmih policijskih upravah ter 60 upravnih enotah po vsej državi.
+Kriminal je eden izmed ključnih kazalnikov zdravja družbe. Razumevanje njegovih vzorcev — kje se pojavlja, kdo so storilci, kdaj se dogaja in kakšne so posledice — je temelj za učinkovito preventivo in načrtovanje policijskega dela. V tej analizi smo pregledali podatke Policije Republike Slovenije vse do leta 2024, ki obsegajo okoli 110.000 vrstic za vsako leto in 65.000 unikatnih kaznivih dejanj v osmih policijskih upravah ter 60 upravnih enotah po vsej državi. S pomočjo teh podatkov smo izdelali aplikacijo v okolju Streamlit, ki ponazarja rezultate analize (npr. trende, vpliv vremena in imigracij ter trajanje pregona).
 
 Cilj analize je bil odgovoriti na vprašanja o geografski porazdelitvi kriminala, vlogi državljanstva storilcev, časovnih vzorcih in resnosti kaznivih dejanj ter s tem ponuditi vpogled, ki bi lahko koristil pri bolj učinkovitem razporejanju policijskih patrulj in oblikovanju preventivnih programov.
 
 ---
 
-## Geografska porazdelitev: Ljubljana na samem vrhu:
+## Trendi kriminala čez leta
 
-Eden izmed najbolj udarnih rezultatov analize je izrazita geografska koncentracija kriminala. Z variančno metodo (μ + 2σ) smo ugotovili, da je **Ljubljana edina upravna enota, ki statistično izstopa** s kar **35.174 kaznivimi dejanji** — daleč nad izračunanim pragom 10.984. Nobena druga upravna enota se niti ni približala tej meji.
+Število kriminalnih dejanj je pred letom 2020 padalo,v letu 2020 je bila najnižja stopnja kriminala, nato pa je začelo spet nekoliko naraščati. Najnižja stopnja kriminala je bila v letu 2020, kar je bilo pričakovano zaradi karantene. Vrste kriminala, ki so v zadnjih letih zelo narasle so kazniva dejanja v prometu in kibernetska kazniva dejanja.
 
-To ni presenetljivo že na prvi pogled, saj je Ljubljana največje mesto v Sloveniji in gospodarsko ter prometno središče države. Vendar pa absolutno število ne pove celotne zgodbe. Ko kazniva dejanja normaliziramo glede na število prebivalcev (KD na 1000 prebivalcev), slika postane še zanimivejša: gostota kriminala v Ljubljani ostaja visoka, kar kaže, da ni zgolj posledica velikega števila ljudi, ampak tudi specifičnih urbanih dejavnikov — večje anonimnosti, intenzivnega nočnega življenja, večjega pretoka turistov in tujcev ter večje koncentracije premoženja.
+![Število vseh kriminalnih dejanj med leti 2009 in 2024](img/trends.png)
 
-Med top 15 upravnimi enotami po absolutnem številu kaznivih dejanj izstopajo tudi Maribor, Celje, Koper in Novo mesto. Slednje je posebej zanimivo z vidika demografske strukture populacije — Novo mesto in okolica imata nadpovprečno prisotnost romske skupnosti, ki je pogosto v kontekstu kriminalistike posebej omenjana. Analiza podatkov kaže, da nekatere manjše urbane enote v jugovzhodni Sloveniji beležijo višjo stopnjo kriminala glede na populacijo.
+**Po mesecih** se največ kriminala zgodi marca, maja in decembra, najmanj pa februarja.
 
-![Kazniva dejanja na 1000 prebivalcev po regiji](img/image-1.png)
+**Po dnevih v tednu** so med tednom kriminalna dejanja približno enakomerno porazdeljena, nekoliko narastejo le ob petkih in ponedeljkih. V soboto in nedeljo pa število drastično upade.
 
----
-
-## Državljanstvo storilcev: Tujci in kriminal
-
-Eno izmed ključnih vprašanj naše analize je bilo: ali obstajajo razlike v pogostosti kaznivih dejanj glede na državljanstvo storilca? Podatki kažejo, da so osebe s **tujim državljanstvom** nadpovprečno zastopane med storilci v Ljubljanski in Koprski policijski upravi — torej v območjih z največjim pretokom migrantov, turistov in sezonskih delavcev.
-
-Gruče, ki smo jih identificirali z metodo K-Means, jasno ločijo Ljubljano od preostalih 59 upravnih enot. Profil gruče 0 (Ljubljana) kaže **delež tujcev med udeleženci 16,1 %**, medtem ko je v gruči 1 (preostale enote) ta delež nižji pri **12,1 %**. To je statistično in praktično pomembna razlika, ki kaže, da je Ljubljana ne le absolutni, ampak tudi relativni vrh glede na vpletenost tujcev v kazniva dejanja.
-
-To seveda ne pomeni nujno, da so tujci "bolj kriminalni" — pomeni, da v mestih z večjim deležem tujcev v populaciji (Ljubljana, Koper, turistična območja) tujci tudi pogosteje nastopajo v policijskih evidencah, bodisi kot storilci bodisi kot žrtve. Podatki o vrsti osebe (žrtev/osumljenec) kažejo, da tujci niso izključno storilci — pogosto nastopajo tudi kot žrtve, zlasti pri premoženjskih kaznivih dejanjih.
+**Po urah** je daleč največ kriminala med 22. in 1. uro zjutraj, nato pa pade in je med 1. in 5. uro najnižja stopnja kriminala.
 
 ---
 
-## Časovni vzorci: Kdaj se kriminal zgodi?
+## Napovedi količine kriminala v prihodnosti
 
-Analiza časovne porazdelitve razkriva jasne vzorce, ki so praktično koristni za načrtovanje policijskega dela.
+S pomočjo Holt-Wintersovega eksponentnega glajenja smo izdelali napovednik števila kriminala v naslednjih nekaj mesecih. Izberemo lahko, od katerega leta naprej učimo naš model ter za koliko mesecev naprej bo napovedal število. 
 
-**Po mesecih** je kriminal relativno enakomerno porazdeljen skozi leto, z blagim porastom v poletnih mesecih (junij–avgust), kar je verjetno povezano z večjim številom turistov, nočnim življenjem in priložnostnimi tatvininami.
+Z izbranim začetnim učnim letom 2020 in napovedjo za 24 mesecev dobimo graf ki nam kaže, da se bo kriminal zviševal.
 
-**Po dnevih v tednu** so petek, sobota in nedelja dnevi z nekoliko višjo stopnjo kriminala, kar sovpada z intenzivnejšim socialnim življenjem in večjo porabo alkohola ob koncu tedna.
-
-**Po urah** pa je slika dramatična: **14,7 % vseh kaznivih dejanj** je evidentiranih v intervalu med polnočjo in 1. uro zjutraj — kar je daleč največ od vseh urnih intervalov. Drugi izrazit vrh je med 23. in 24. uro (9,0 %). V dnevnih urah je kriminal enakomerno razporejen z vrhovimi med 15. in 18. uro. Ta vzorec jasno kaže, da je nočni čas — zlasti prehod med soboto in nedeljo — kritično obdobje, ki zahteva okrepljene policijske patrulje.
+![Napoved kriminala](img/napoved.png)
 
 ---
 
-## Vrsta kaznivih dejanj in materialna škoda
+## Geografska analiza
 
-Med vrstami kaznivih dejanj prevladujejo **premoženjska kazniva dejanja**, kar je skladno s trendi v večini evropskih držav. Med top 20 kaznivih dejanj so najpogostejše tatvine, goljufije in kazniva dejanja zoper premoženje.
+Največ kriminala v Sloveniji se zgodi v Ljubljani, tako v absolutnih številkah kot tudi pri normalizaciji na 100 prebivalcev posamezne regije. Pri normaliziranih vrednostih ji sledita Novo mesto in Koper, po absolutnem številu pa Celje in Novo mesto. Najmanj kriminala je v obeh primerih v Novi Gorici in Murski Soboti.
 
-Analiza materialne škode kaže močno asimetrično porazdelitev: **mediana škode znaša le 100 EUR**, kar pomeni, da je večina kaznivih dejanj premoženjske narave razmeroma nizke vrednosti. Kljub temu obstaja dolg rep visokovrednih kaznivih dejanj — Z-score metoda je identificirala **416 statističnih osamelcev**, kjer škoda presega prag 3 standardne deviacije nad povprečjem (na logaritemski skali), IQR metoda pa je zaznala kar **3.155 primerov** nad zgornjo mejo 2.350 EUR. Med temi izstopajo primeri poslovne goljufije, zlorabe položaja in overitve lažne vsebine s škodami do **500.000 EUR** in več.
-
-KS test je potrdil, da porazdelitev materialne škode ni normalna niti na logaritemski skali (p ≈ 0), torej se močno razlikujejo od večinskih manjših  do nekaterih izredno velikih škod.
-
-![Top 20 kaznivih dejanj](img/image-2.png)
+V vseh regijah je največ premoženjskih kaznivih dejanj, sledi pa nasilje nad osebami, ki največji delež predstavlja v PU Murska Sobota, s kar 27,8 %.
 
 ---
 
-## Demografski profil storilcev in žrtev
+## Vpliv števila imigrantov na kriminal
 
-Starostna analiza pokaže, da so najpogostejši storilci v starostnem razredu **24–44 let**, torej aktivna delovna populacija. Med žrtvami je porazdelitev bolj enakomerna, a z opaznim deležem najranljivejših skupin — otrok in starejših.
+S pomočjo Pearsonovega koeficienta korelacije smo izračunali, kakšna je korelacija med številom vrste kriminala in številom izdanih dovoljenj za prebivanje tujcem. Število izdanih dovoljenj se med leti ni drastično spremenilo.
 
-Po spolu so moški statistično bistveno bolj zastopani tako med storilci kot med žrtvami, kar je skladno z globalnimi trendi kriminalistike.
+Največjo negativno korelacijo ima vpliv imigrantov na človekove pravice in volitve(67%), največjo pozitivno pa na zlorabo uradnega položaja in oviranje pravosodja(0.32).
 
-Kar se tiče vpliva substanc, podatki kažejo, da je **vpliv alkohola evidentiran v razmeroma majhnem deležu primerov** — kar je nekoliko presenetljivo, a gre deloma pripisati dejstvu, da je ta podatek pogosto neznan ali ni evidentiran (visok delež vrednosti "NN"). Vpliv mamil je še redkeje zabeležen (tu je vredno omeniti, da je kar veliko podatkov nasplosno bilo "NN", kar kaže na nenajboljše beleženje).
-
----
-
-## Gručenje in profili upravnih enot
-
-Z metodo K-Means (optimalno K=2) in aglomerativnim gručenjem (Ward metoda) smo identificirali **dva jasno ločena profila** upravnih enot v Sloveniji. Obe metodi sta dali identične rezultate (Adjusted Rand Index = 1,0), kar kaže na robustnost ugotovitev.
-
-**Gruča 0 — Ljubljana:** absolutni statistični osamelec z več kot 21.000 unikatnimi KD, visokim številom udeleženih oseb (35.063) in nadpovprečnim deležem tujcev. Ljubljana se od vseh ostalih enot loči tako po obsegu kot po profilu kriminala.
-
-**Gruča 1 — preostale enote:** 59 upravnih enot s povprečno 735 KD na enoto, nižjim deležem tujcev in nekoliko višjim deležem kaznivih dejanj pod vplivom alkohola in mamil — kar nakazuje, da je v manjših, bolj ruralnih okoljih "klasičen" kriminal (nasilje, prekrški pod vplivom substanc) relativno pogostejši kot v urbanih centrih.
-
-PCA projekcija na dve komponenti pojasni 45,9 % variance (PC1: 25,5 %, PC2: 20,4 %), kar kaže, da je kriminalitetni profil upravnih enot relativno kompleksen in ga ni mogoče zvesti le na en ali dva dejavnika.
+![Vpliv imigranotov na kriminal človekovih pravic in volitev.](img/immigration.png)
 
 ---
 
-## Normalizacija
+## Vpliv vremena na kriminal
 
-Podatke smo normalizirali glede na prebivalstvo (število kaznjivih dejanj na 100.000 prebivalcev), število dejanj ob neki uri glede na število dejanj v regiji in odstotek posamezne vrste kriminala na regijo.
+S pomočjo korelacijskega koeficienta smo izračunali tudi vpliv temperature in količine padavin na količino kriminala. Model za nobenega od teh primerov v letu 2024 ne najde jasne korelacije.
 
-Tudi po normalizaciji je v Ljubljani še vedno največ kriminala, sledi pa ji Novo mesto. Najbolj varna je Murska Sobota, ki ima 3-krat manj kriminala na prebivalca kot Ljubljana. V Ljubljani prevladuje premoženjski kriminal, v manjših regijah pa je več medsebojnega nasilja. Najmanj kriminala je med 4:00 in 5:00, popoldne pa doseže vrhunec.
+## Čas kazenskega pregona
 
----
-
-## Število imigrantov
-
-Pridobili smo tudi podatke o izdanih dovoljenjih za prebivanje imigrantov v RS. Izračunali smo korelacijo med kaznivimi dejanji in številom imigrantov, za kar se v letu 2024 ni pokazala velika korelacija.
+Izračunali smo tudi, koliko časa traja postopek od vložitve obtožnice do končne sodbe. Večina primerov se zaključi hitro, vzame manj kot eno leto, povprečno pa traja 0.3 leta. 16 tisoč primerov je trajalo eno leto, obstaja pa tudi primer, ki je do zaključka sodbe potreboval kar 19 let.
 
 ---
 
-## Vreme
+## Verjetnost kriminalnega dogodka
 
-Izračunali smo korelacijo med temperaturo ter količino padavin in številom kriminalnih dejanj. Ta analiza ni podala korelacije med temi podatki.
+Ustvarili smo program, ki pri določenem scenariju napove, kako verjeten je kriminal in katera vrsta se bo najverjetneje zgodila. Model za leto 2024 ima 64.6% natančnost.
 
----
-
-## Napovedi
-
-Izdelali smo skripto, ki na podlagi ure, dneva, lokacije in števila imigrantov izračuna, kakšna je verjetnost, da se bo zgodilo kriminalno dejanje in katero je najbolj verjetno. Za ponedeljek ob 10 zjutraj pri številu imigrantov 7000 je v Ljubljani naprimer možnost kriminala 61%, najverjetneje pa se bo zgodilo ponarejanje in listine.
+Nastavimo lahko uro, dan v tednu, policijsko upravo in število izdanih dovoljenj za bivanje tujcem. Tako nam model za petek ob 23. uri v Ljubljani napove, da je verjetnost kriminala 51.3%, najverjetneje pa se bodo zgodila premoženjska kazniva dejanja.
 
 ---
-
-## Aplikacija
-
-Narejena aplikacija nam omogoča pregled statistike kriminala po letih, število kriminala na 100 prebivalcev za določeno regijo, analizo po urah in vrstah kaznivih dejanj, dolgoročno napovedovanje trendov, vpliv priseljevanja in vremena na kriminal, trajanja pregona ter analizo odnosov med udeleženimi osebami v kaznivih dejanjih.
 
 ## Sklepne ugotovitve
 
-Analiza kriminala v Sloveniji za leto 2024 razkriva več ključnih vzorcev:
+Analiza podatkov Policije Republike Slovenije za obdobje do leta 2024 je razkrila več pomembnih vzorcev slovenskega kriminala.
 
-Ljubljana izstopa na vseh ravneh: absolutnem številu kaznivih dejanj, deležu tujcev med udeleženci in statistični izjemnosti v primerjavi z vsemi drugimi upravnimi enotami v državi. To je pričakovano za prestolnico, a opomni na potrebo po specifičnih politikah za urbane kriminalne vzorce.
+**Splošni trendi** kažejo, da je kriminaliteta dosegla najnižjo točko leta 2020, kar je neposredna posledica pandemičnih omejitev, nato pa se je trend obrnil navzgor. Med najhitreje rastočimi kategorijami izstopata prometna in kibernetska kriminaliteta, ki odražata spreminjajoče se vedenjske in tehnološke vzorce v sodobni družbi.
 
-Nočne ure so visoko rizično obdobje. Skoraj četrtina vseh kaznivih dejanj se zgodi med 22. uro in 2. uro zjutraj, kar je jasen signal za okrepitev nočnih patrulj.
+**Geografsko Ljubljana** izstopa tako po absolutnem številu kot po normalizirani stopnji kriminalitete na prebivalca, sledita ji Novo Mesto in Koper. Nasprotno, Murska Sobota in Nova Gorica beležita najnižje vrednosti. V vseh regijah prevladuje premoženjska kriminaliteta, medtem ko je nasilje nad osebami posebej izrazito v PU Murska Sobota.
 
-Večina kriminala je premoženjska narava z nizko vrednostjo škode, a obstaja razmeroma majhna skupina visokoštetnih, finančno izjemno škodljivih dejanj — zlasti goljufije in zlorabe položaja.
+**Časovni vzorci** kažejo, da se največ kaznivih dejanj zgodi med 22. in 1. uro ponoči, kar nakazuje, da nočne ure predstavljajo največje tveganje. Med tednom je kriminaliteta sorazmerno enakomerna, z rahlo povišanjem ob petkih in ponedeljkih, ob vikendih pa opazno upade.
 
-Geografske razlike v kriminalnem profilu so statistično robustne: dve jasno ločeni gruči kažeta, da enotna politika za vso Slovenijo ni optimalna. Ljubljana bi npr. zahteva drugačen pristop kot ruralne enote.
+**Demografski vplivi** so bili preverjeni z analizo korelacije med imigracijo in kriminaliteto. Rezultati ne kažejo statistično pomembne splošne zveze, posamezne korelacije pa so bodisi šibke bodisi negativne, kar ne potrjuje pogosto prisotnih predsodkov o povezavi med imigranti in kriminaliteto.
 
-Število imigrantov nima pretiranega vpliva na število kriminala.
+**Napovedni modeli** z metodo Holt-Winters nakazujejo zmeren porast kriminalitete v prihodnih mesecih. Klasifikacijski model za napoved verjetnosti in vrste kaznivega dejanja pri danih okoliščinah dosega 64,6 % natančnost, kar predstavlja dober izhodiščni temelj za nadaljnji razvoj.
+
+**Kazenski pregon** je v povprečju hiter (0,3 leta), čeprav posamezni primeri razkrivajo sistemske zamude, ki trajajo tudi do 19 let.
+
+Na osnovi ugotovitev bi bila smiselna okrepitev policijske prisotnosti v večernih in nočnih urah, ciljano usmerjanje virov v regije z visoko normalizirano stopnjo kriminalitete ter razvoj specializiranih programov za preprečevanje prometne in kibernetske kriminalitete, ki sta področji z izrazito rastočim trendom.
