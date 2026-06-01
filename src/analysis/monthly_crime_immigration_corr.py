@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from analysis.process_monthly_immigration import generate_monthly_immigration_file
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,10 @@ def analyze_monthly_correlation(year: int, base_directory: Path, crime_cluster: 
         logger.error(f"Crime data file for the year {year} does not exist: {crime_file}")
         return pd.DataFrame()
     if not immigration_file.exists():
-        logger.error(f"Monthly immigration file does not exist: {immigration_file}")
+        logger.info(f"Monthly immigration file missing; generating it: {immigration_file}")
+        generate_monthly_immigration_file(immigration_file.parent)
+    if not immigration_file.exists():
+        logger.error(f"Could not build the monthly immigration file: {immigration_file}")
         return pd.DataFrame()
 
     # Data ingestion

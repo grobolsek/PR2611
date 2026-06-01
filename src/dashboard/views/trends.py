@@ -2,34 +2,66 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import plotly.express as px
 import streamlit as st
 
 from dashboard import data
 
+if TYPE_CHECKING:
+    import pandas as pd
+
+_DIMENSIONS = {"Year": "year", "Month": "month", "Day of week": "weekday", "Hour of day": "hour"}
+
+
+def _side_panel(trends: pd.DataFrame, dimension: str, dim_label: str) -> None:
+    """Left-column summary: biggest movers (year) or totals by time bucket."""
+    if dimension == "year":
+        st.subheader("Biggest movers")
+        first, last = trends.index.min(), trends.index.max()
+        change = (trends.loc[last] - trends.loc[first]).sort_values(ascending=False)
+        st.caption(f"Absolute change {first} → {last}")
+        table = change.reset_index().rename(columns={"index": "Cluster", 0: "Change"})
+    else:
+        st.subheader(f"Offences by {dim_label.lower()}")
+        by_bucket = trends.sum(axis=1)
+        st.caption(f"Peak: {by_bucket.idxmax()} ({by_bucket.max():,} offences)")
+        table = by_bucket.reset_index().rename(columns={trends.index.name: dim_label, 0: "Offences"})
+    st.dataframe(table, use_container_width=True, hide_index=True)
+
 
 def render() -> None:
     st.title("📈 Historical Trends")
-    st.caption("Long-term structural shifts in recorded crime, by cluster (data/analysis/historical_crime_trends.csv).")
+    st.caption("Long-term structural shifts in recorded crime, by cluster and time dimension.")
 
-    trends = data.crime_group_trends()
+    dim_label = st.radio("Break down by", list(_DIMENSIONS), horizontal=True)
+    dimension = _DIMENSIONS[dim_label]
+
+    if dimension == "year":
+        trends = data.crime_group_trends()
+        if not trends.empty:
+            trends.index = trends.index.astype(int)
+    else:
+        trends = data.crime_temporal_trends(dimension)
     if trends.empty:
         st.warning("No trend data available.")
         return
 
-    trends.index = trends.index.astype(int)
-    clusters = list(trends.columns)
     totals_by_cluster = trends.sum().sort_values(ascending=False)
-    default = list(totals_by_cluster.head(5).index)
 
-    selected = st.multiselect("Crime clusters", clusters, default=default)
-    normalize = st.toggle("Show as share of yearly total (%)", value=False)
+    # Offer an "All crimes (combined)" pseudo-cluster that sums every cluster.
+    options = [data.ALL_CRIMES_LABEL, *totals_by_cluster.index]
+    selected = st.multiselect("Crime clusters", options, default=[data.ALL_CRIMES_LABEL])
+    normalize = st.toggle(f"Show as share of {dim_label.lower()} total (%)", value=False)
 
     if not selected:
         st.info("Pick at least one crime cluster.")
         return
 
-    plot_df = trends[selected].copy()
+    plot_source = trends.copy()
+    plot_source[data.ALL_CRIMES_LABEL] = trends.sum(axis=1)
+    plot_df = plot_source[selected].copy()
     ylabel = "Unique offences"
     if normalize:
         plot_df = plot_df.div(trends.sum(axis=1), axis=0) * 100
@@ -38,21 +70,13 @@ def render() -> None:
     long = plot_df.reset_index().melt(id_vars=trends.index.name or "index", var_name="Cluster", value_name=ylabel)
     xcol = long.columns[0]
     fig = px.line(long, x=xcol, y=ylabel, color="Cluster", markers=True)
-    fig.update_layout(height=460, xaxis_title="Year", legend_title="")
+    fig.update_layout(height=460, xaxis_title=dim_label, legend_title="")
     st.plotly_chart(fig, use_container_width=True)
 
     st.divider()
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Biggest movers")
-        first, last = trends.index.min(), trends.index.max()
-        change = (trends.loc[last] - trends.loc[first]).sort_values(ascending=False)
-        st.caption(f"Absolute change {first} → {last}")
-        st.dataframe(
-            change.reset_index().rename(columns={"index": "Cluster", 0: "Change"}),
-            use_container_width=True,
-            hide_index=True,
-        )
+        _side_panel(trends, dimension, dim_label)
     with col2:
         st.subheader("Cluster totals (all years)")
         fig2 = px.pie(

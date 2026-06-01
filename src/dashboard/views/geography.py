@@ -91,47 +91,21 @@ def render() -> None:
     )
 
     st.divider()
-    tab_hour, tab_type = st.tabs(["⏰ Hourly pattern", "🏷️ Crime mix per region"])
-
-    with tab_hour:
-        hourly = data.hourly_distribution(year)
-        if hourly.empty:
-            st.info("No usable `UraStoritve` values for this year.")
-        else:
-            locations = sorted(hourly["location"].unique())
-            picked = st.multiselect(
-                "Regions",
-                locations,
-                default=[loc for loc in counts["location"].head(4) if loc in locations],
-                key="hour_regions",
-            )
-            sub = hourly[hourly["location"].isin(picked)] if picked else hourly
-            fig_h = px.line(
-                sub,
-                x="hour",
-                y="pct_of_city",
-                color="location",
-                markers=True,
-                labels={"hour": "Hour of day", "pct_of_city": "% of region's crime"},
-            )
-            fig_h.update_layout(height=420, legend_title="")
-            st.plotly_chart(fig_h, use_container_width=True)
-
-    with tab_type:
-        dist = data.crime_type_distribution(year)
-        if dist.empty:
-            st.info("No data.")
-        else:
-            region = st.selectbox("Region", sorted(dist["location"].unique()), key="type_region")
-            sub = dist[dist["location"] == region].sort_values("count", ascending=False)
-            fig_t = px.bar(
-                sub,
-                x="count",
-                y="crime_type",
-                orientation="h",
-                text="pct_of_city",
-                labels={"count": "Records", "crime_type": ""},
-            )
-            fig_t.update_layout(height=520, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))
-            fig_t.update_traces(texttemplate="%{text}%", textposition="outside")
-            st.plotly_chart(fig_t, use_container_width=True)
+    st.subheader("🏷️ Crime mix per region")
+    dist = data.crime_type_distribution(year)
+    if dist.empty:
+        st.info("No data.")
+    else:
+        region = st.selectbox("Region", sorted(dist["location"].unique()), key="type_region")
+        sub = dist[dist["location"] == region].sort_values("count", ascending=False)
+        fig_t = px.bar(
+            sub,
+            x="count",
+            y="crime_type",
+            orientation="h",
+            text="pct_of_city",
+            labels={"count": "Records", "crime_type": ""},
+        )
+        fig_t.update_layout(height=520, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))
+        fig_t.update_traces(texttemplate="%{text}%", textposition="outside")
+        st.plotly_chart(fig_t, use_container_width=True)

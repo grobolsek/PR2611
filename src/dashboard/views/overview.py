@@ -7,6 +7,49 @@ import streamlit as st
 
 from dashboard import data
 
+_GENDER_LABELS = {"MOŠKI": "Male", "ŽENSKI": "Female", "PRAVNA OSEBA": "Legal entity"}
+_CITIZENSHIP_LABELS = {"SLOVENSKO": "Slovenian", "TUJE": "Foreign"}
+
+
+def _suspect_section(year_range: str) -> None:
+    """Most-popular-crimes bar plus gender / citizenship demographics for suspects."""
+    st.subheader(f"🧑‍⚖️ Suspect profile — {year_range}")
+    st.caption("Suspect records only (OVADENI / NEOVADENI OSUMLJENEC), all years combined.")
+    profile = data.suspect_profile_all()
+    if not profile:
+        st.info("No suspect records found.")
+        return
+
+    st.markdown("**Most popular crimes**")
+    fig_c = px.bar(
+        profile["top_crimes"].sort_values("count"),
+        x="count",
+        y="crime",
+        orientation="h",
+        color="count",
+        color_continuous_scale="Reds",
+        labels={"count": "Suspect records", "crime": ""},
+    )
+    fig_c.update_layout(height=380, coloraxis_showscale=False, margin=dict(t=10))
+    st.plotly_chart(fig_c, use_container_width=True)
+
+    st.markdown("**Demographics**")
+    d1, d2 = st.columns(2)
+    with d1:
+        gender = profile["gender"].assign(gender=lambda d: d["gender"].map(_GENDER_LABELS).fillna(d["gender"]))
+        fig_g = px.pie(gender, names="gender", values="count", hole=0.45, title="Gender")
+        fig_g.update_layout(height=320, margin=dict(t=40))
+        fig_g.update_traces(textinfo="percent+label")
+        st.plotly_chart(fig_g, use_container_width=True)
+    with d2:
+        citizenship = profile["citizenship"].assign(
+            citizenship=lambda d: d["citizenship"].map(_CITIZENSHIP_LABELS).fillna(d["citizenship"]),
+        )
+        fig_n = px.pie(citizenship, names="citizenship", values="count", hole=0.45, title="Slovenian vs foreign")
+        fig_n.update_layout(height=320, margin=dict(t=40))
+        fig_n.update_traces(textinfo="percent+label")
+        st.plotly_chart(fig_n, use_container_width=True)
+
 
 def render() -> None:
     st.title("🇸🇮 Slovenian Crime Data Explorer")
@@ -54,6 +97,9 @@ def render() -> None:
             st.metric("Suspect records", f"{summary['suspect_rows']:,}")
             st.caption(f"Top cluster: **{summary['top_cluster']}**")
             st.caption(f"Top region: **{summary['top_location']}**")
+
+    st.divider()
+    _suspect_section(f"{min(years)}–{max(years)}")
 
     st.divider()
     with st.expander("About the data sources"):
