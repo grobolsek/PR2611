@@ -60,7 +60,7 @@ def render() -> None:
 
     with col_count:
         st.subheader("Records")
-        st.plotly_chart(_hbar(counts, "count", "Records", "Reds"), use_container_width=True)
+        st.plotly_chart(_hbar(counts, "count", "Records", "Reds"), width='stretch')
 
     with col_rate:
         st.subheader("Per 100 inhabitants")
@@ -70,12 +70,12 @@ def render() -> None:
         else:
             st.plotly_chart(
                 _hbar(rate, "percent", "Records per 100 inhabitants", "Blues"),
-                use_container_width=True,
+                width='stretch',
             )
 
     st.dataframe(
         counts,
-        use_container_width=True,
+        width='stretch',
         hide_index=True,
         column_config={
             "location": "Region",
@@ -108,4 +108,4 @@ def render() -> None:
         )
         fig_t.update_layout(height=520, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))
         fig_t.update_traces(texttemplate="%{text}%", textposition="outside")
-        st.plotly_chart(fig_t, use_container_width=True)
+        st.plotly_chart(fig_t, width='stretch')

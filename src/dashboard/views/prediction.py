@@ -95,7 +95,7 @@ def render() -> None:
     location = b.selectbox("Police directorate", models["locations"])
     immigration = b.slider("Monthly issued permits", 0, 12000, 7000, step=250)
 
-    if st.button("Predict", type="primary", use_container_width=True):
+    if st.button("Predict", type="primary", width='stretch'):
         day_enc = models["encoders"]["Day"].transform([day])[0]
         loc_enc = models["encoders"]["Location"].transform([location])[0]
         x = pd.DataFrame([[hour, day_enc, loc_enc, immigration]], columns=FEATURE_COLS)
@@ -120,7 +120,7 @@ def render() -> None:
             labels={"probability": "Probability", "cluster": ""},
         )
         fig.update_layout(height=360, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     st.divider()
     st.subheader("What drives the occurrence model?")
@@ -129,4 +129,4 @@ def render() -> None:
     )
     fig_i = px.bar(importances, x="importance", y="feature", orientation="h")
     fig_i.update_layout(height=260, yaxis=dict(categoryorder="total ascending"), margin=dict(t=10))
-    st.plotly_chart(fig_i, use_container_width=True)
+    st.plotly_chart(fig_i, width='stretch')

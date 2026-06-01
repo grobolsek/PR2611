@@ -49,7 +49,7 @@ def render() -> None:
         legend=dict(orientation="h", y=1.02, yanchor="bottom"),
         margin=dict(t=10),
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Series start", series.index.min().strftime("%m.%Y"))
@@ -60,4 +60,4 @@ def render() -> None:
     table = forecast.head(12).round().astype(int).reset_index()
     table.columns = ["Month", "Predicted offences"]
     table["Month"] = table["Month"].dt.strftime("%m.%Y")
-    st.dataframe(table, use_container_width=True, hide_index=True)
+    st.dataframe(table, width='stretch', hide_index=True)

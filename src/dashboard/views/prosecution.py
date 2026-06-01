@@ -34,7 +34,7 @@ def render() -> None:
         st.subheader("Prosecution duration distribution")
         fig = px.histogram(clean, x="ProsecutionDuration", nbins=int(clean["ProsecutionDuration"].max()) + 1)
         fig.update_layout(height=360, xaxis_title="Years to close", yaxis_title="Crime groups", margin=dict(t=10))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with right:
         st.subheader("Average duration by crime year")
@@ -42,7 +42,7 @@ def render() -> None:
         by_year = by_year[(by_year["CrimeYear"] >= 1990) & (by_year["CrimeYear"] <= 2025)]
         fig2 = px.line(by_year, x="CrimeYear", y="ProsecutionDuration", markers=True)
         fig2.update_layout(height=360, xaxis_title="Crime year", yaxis_title="Avg years to close", margin=dict(t=10))
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width='stretch')
 
     with st.expander("Raw prosecution table"):
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width='stretch', hide_index=True)
